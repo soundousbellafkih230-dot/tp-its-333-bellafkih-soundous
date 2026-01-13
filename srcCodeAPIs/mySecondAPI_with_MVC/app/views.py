@@ -35,3 +35,22 @@ def display_params():
     nom = request.args.get('surname', 'Non renseigné')
     prenom = request.args.get('name', 'Non renseigné')
     return render_template('index.html', surname=nom, name=prenom)
+
+
+sante_db = {
+    "alice": {"poids": 65, "taille": 170, "tension": "12/8"},
+    "bob": {"poids": 80, "taille": 185, "tension": "13/9"}
+}
+
+@app.route('/api/sante', methods=['GET'])
+def get_sante():
+    # On cherche le nom dans l'URL (ex: /api/sante?nom=alice)
+    nom = request.args.get('nom')
+    
+    # On cherche dans le dictionnaire
+    resultat = sante_db.get(nom.lower())
+    
+    if resultat:
+        return jsonify({"status": "success", "data": resultat}), 200
+    else:
+        return jsonify({"status": "error", "message": "Personne non trouvée"}), 404
