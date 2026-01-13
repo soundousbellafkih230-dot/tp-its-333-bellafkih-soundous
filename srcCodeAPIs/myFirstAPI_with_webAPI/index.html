@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<body>
+    <h2>Test de mon API (EXO2)</h2>
+    <input type="text" id="nomInput" placeholder="Entrez un nom">
+    <button onclick="envoyerNom()">Afficher le nom</button>
+    <p id="resultat"></p>
+
+    <script>
+        async function envoyerNom() {
+            const nom = document.getElementById('nomInput').value;
+            const response = await fetch('http://127.0.0.1:5000/api/utilisateurs', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({nom: nom})
+            });
+            const data = await response.json();
+            document.getElementById('resultat').innerText = "Réponse de l'API : " + data.nom_recu;
+        }
+    </script>
+</body>
+</html>
