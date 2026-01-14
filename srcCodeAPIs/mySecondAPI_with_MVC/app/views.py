@@ -1,39 +1,46 @@
 from app import app
 from flask import render_template, request, jsonify
+import sqlite3
+import jwt
+import datetime
 
-from flask import jsonify, render_template, request
-from app import app # On importe l'instance de Flask créée dans __init__.py
+# --- CODE POUR L'EXERCICE ---
 
-### EXO1 - simple API
-@app.route('/api/simple', methods=['GET'])
-def simple_api():
-    return jsonify({"message": "Ceci est une API en structure MVC"}), 200
+# 1. Route pour afficher le formulaire de l'étudiant
+@app.route('/new-student')
+def new_student_form():
+    # On utilise new.html comme demandé dans le schéma MVC
+    return render_template('new.html')
 
-### EXO2 - API with simple display
-@app.route('/api/display', methods=['GET'])
-def simple_display():
-    return render_template('index.html')
+# 2. Route pour enregistrer l'étudiant (Action du formulaire)
+@app.route('/new', methods=['POST'])
+def add_record():
+    # Récupération des données du formulaire selon les noms (n, add, pin)
+    nm = request.form['n']
+    addr = request.form['add']
+    pin = request.form['pin']
 
-### EXO3 - API with parameters display 
-@app.route('/api/parameters', methods=['GET'])
-def parameters_display():
-    user_name = "soundous"
-    return render_template('index.html', name=user_name)
+    try:
+        # Connexion à SQLite et insertion comme dans la slide
+        with sqlite3.connect("database.db") as con:
+            cur = con.cursor()
+            cur.execute("INSERT INTO etudiants (nom, addr, pin) VALUES (?,?,?)", (nm, addr, pin))
+            con.commit()
+            msg = "Enregistrement réussi"
+    except:
+        con.rollback()
+        msg = "Erreur lors de l'insertion"
+    finally:
+        con.close()
+        return jsonify({"message": msg}), 200
 
-### EXO4 - API with parameters retrieved from URL 
-@app.route('/api/search', methods=['GET'])
-def search_api():
-    query_name = request.args.get('name', 'Utilisateur inconnu')
-    return jsonify({
-        "status": "success",
-        "message": f"Bonjour {query_name}, votre paramètre a bien été récupéré !"
-    }), 200
-
-# Version "inverse" (Paramètres vers la Vue)
-@app.route('/params', methods=['GET'])
-def display_params():
-    nom = request.args.get('surname', 'Non renseigné')
-    prenom = request.args.get('name', 'Non renseigné')
-    return render_template('index.html', surname=nom, name=prenom)
-
-
+# 3. Route pour l'authentification Admin avec JWT (Consigne en rouge)
+@app.route('/login-admin', methods=['POST'])
+def login_admin():
+    # On génère un token JWT qui expire dans 30 minutes
+    token = jwt.encode({
+        'user': 'admin',
+        'exp': datetime.datetime.utcnow() + datetime.timedelta(minutes=30)
+    }, app.config['SECRET_KEY'], algorithm="HS256")
+    
+    return jsonify({'token': token}), 200
