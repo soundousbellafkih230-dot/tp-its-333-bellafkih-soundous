@@ -1,0 +1,43 @@
+services:
+  auth-service:
+    build:
+      context: ./auth-service
+      dockerfile: Dockerfile
+    ports:
+      - "5000:5000"
+    environment:
+      - JWT_SECRET=super_secret_tp_change_me
+      - JWT_EXP_MIN=120
+      - AUTH_DB_PATH=/data/users.db
+    volumes:
+      - auth_data:/data
+
+  person-service:
+    build:
+      context: ./person-service
+      dockerfile: Dockerfile
+    ports:
+      - "5001:5001"
+    environment:
+      - JWT_SECRET=super_secret_tp_change_me
+      - PERSON_DB_PATH=/data/database.db
+    volumes:
+      - person_data:/data
+
+  health-service:
+    build:
+      context: ./health-service
+      dockerfile: Dockerfile
+    ports:
+      - "5002:5002"
+    environment:
+      - JWT_SECRET=super_secret_tp_change_me
+      - PERSON_SERVICE_URL=http://person-service:5001
+      - HEALTH_DATA_PATH=/data/data.json
+    volumes:
+      - health_data:/data
+
+volumes:
+  auth_data:
+  person_data:
+  health_data:
